@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="食圖">
+<meta name="theme-color" content="#0f0f0f">
+<title>食圖 — 美食地圖</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f0f;--surface:#1a1a1a;--card:#222;--border:#333;
+  --text:#f0ede8;--muted:#888;--accent:#ff6b35;--accent2:#ffd166;
+  --blue:#4ea8de;--green:#52b788;--red:#e63946;
+  --radius:14px;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;overflow-x:hidden}
+.app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto;position:relative;background:var(--bg);box-shadow:0 0 60px rgba(0,0,0,.5)}
+.screen{flex:1;overflow-y:auto;padding-bottom:80px;display:none}
+.screen.active{display:block}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding:8px 0 env(safe-area-inset-bottom,8px)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;cursor:pointer;color:var(--muted);transition:color .2s;border:none;background:none;font-family:var(--font)}
+.nav-btn.active{color:var(--accent)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-label{font-size:10px;letter-spacing:.05em}
+.map-header{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+.map-title{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.map-title span{color:var(--accent)}
+.distance-bar{margin:0 16px 12px;background:var(--surface);border:1px solid var(--border);border-radius:50px;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.distance-bar label{font-size:12px;color:var(--muted);white-space:nowrap;font-family:var(--mono)}
+.dist-val{font-size:13px;font-weight:500;color:var(--accent2);font-family:var(--mono);min-width:40px;text-align:right}
+input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer}
+.map-canvas{margin:0 16px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);position:relative;height:260px;background:#1c2535}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.4}
+.map-road-h{position:absolute;background:#2a3a2a;height:14px;left:0;right:0}
+.map-road-v{position:absolute;background:#2a3a2a;width:14px;top:0;bottom:0}
+.you-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10}
+.you-dot{width:18px;height:18px;background:var(--blue);border-radius:50%;border:3px solid white;box-shadow:0 0 0 8px rgba(78,168,222,.2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 8px rgba(78,168,222,.15)}50%{box-shadow:0 0 0 16px rgba(78,168,222,.05)}}
+.range-circle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:2px dashed rgba(255,107,53,.4);border-radius:50%;transition:width .3s,height .3s}
+.store-pin{position:absolute;cursor:pointer;transform:translate(-50%,-100%);z-index:5;transition:transform .15s}
+.store-pin:hover{transform:translate(-50%,-100%) scale(1.15)}
+.pin-bubble{background:var(--card);border:1.5px solid var(--accent);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:500;white-space:nowrap;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.pin-tail{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--accent);margin:0 auto}
+.section-head{padding:16px 16px 8px;font-size:12px;color:var(--muted);letter-spacing:.1em;font-family:var(--mono)}
+.store-card{margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;transition:border-color .2s}
+.store-card:hover{border-color:var(--accent)}
+.store-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.store-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.tag{font-size:10px;padding:2px 8px;border-radius:20px;font-family:var(--mono)}
+.tag-style{background:rgba(255,107,53,.15);color:var(--accent);border:1px solid rgba(255,107,53,.3)}
+.tag-type{background:rgba(82,183,136,.15);color:var(--green);border:1px solid rgba(82,183,136,.3)}
+.store-hours{font-size:11px;color:var(--muted)}
+.store-dist{font-size:12px;color:var(--accent2);font-family:var(--mono);white-space:nowrap}
+.filter-row{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:var(--font)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.list-header{padding:16px;display:flex;align-items:center;gap:12px}
+.list-title{font-size:20px;font-weight:700}
+.list-count{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.add-header{padding:20px 16px 8px;font-size:20px;font-weight:700}
+.add-tabs{display:flex;margin:0 16px 16px;background:var(--surface);border-radius:10px;padding:3px}
+.add-tab{flex:1;text-align:center;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s}
+.add-tab.on{background:var(--card);color:var(--text)}
+.add-section{padding:0 16px;display:none}
+.add-section.on{display:block}
+.ig-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.ig-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);letter-spacing:.08em}
+.ig-input-row{display:flex;gap:8px}
+.ig-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none}
+.ig-input:focus{border-color:var(--accent)}
+.ig-input::placeholder{color:var(--muted)}
+.btn-parse{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:var(--font);transition:opacity .2s}
+.btn-parse:disabled{opacity:.5;cursor:not-allowed}
+.parse-result{background:var(--card);border:1px solid var(--green);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:none}
+.parse-result.show{display:block}
+.parse-status{font-size:12px;color:var(--green);font-family:var(--mono);margin-bottom:8px}
+.parse-field{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px}
+.parse-field:last-child{border-bottom:none}
+.parse-key{color:var(--muted)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-family:var(--mono);letter-spacing:.06em}
+.field input,.field select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--card)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-save{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:var(--font);letter-spacing:.02em;transition:opacity .2s}
+.btn-save:hover{opacity:.9}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px;width:100%;max-width:430px;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--mono)}
+.modal-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.modal-row:last-child{border-bottom:none}
+.modal-key{color:var(--muted)}
+.modal-val{font-weight:500;text-align:right;max-width:60%}
+.modal-close{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-size:14px;cursor:pointer;margin-top:16px;font-family:var(--font)}
+.no-stores{text-align:center;padding:40px 20px;color:var(--muted)}
+.no-stores .icon{font-size:40px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="screen active" id="screen-map">
+    <div class="map-header">
+      <div class="map-title">食<span>圖</span></div>
+      <div style="font-size:12px;color:var(--muted);font-family:var(--mono)">📍 我的位置</div>
+    </div>
+    <div class="distance-bar">
+      <label>搜尋範圍</label>
+      <input type="range" id="dist-slider" min="200" max="5000" step="100" value="1000" oninput="updateDist(this.value)">
+      <span class="dist-val" id="dist-label">1.0km</span>
+    </div>
+    <div class="map-canvas" id="map-canvas">
+      <div class="map-grid"></div>
+      <div class="map-road-h" style="top:45%"></div>
+      <div class="map-road-h" style="top:70%"></div>
+      <div class="map-road-v" style="left:35%"></div>
+      <div class="map-road-v" style="left:65%"></div>
+      <div class="range-circle" id="range-circle"></div>
+      <div class="you-pin"><div class="you-dot"></div></div>
+    </div>
+    <div class="section-head" id="nearby-label">附近 0 間</div>
+    <div class="filter-row" id="filter-row">
+      <div class="chip on" data-f="all" onclick="setFilter('all',this)">全部</div>
+      <div class="chip" data-f="日式" onclick="setFilter('日式',this)">🍱 日式</div>
+      <div class="chip" data-f="泰式" onclick="setFilter('泰式',this)">🍜 泰式</div>
+      <div class="chip" data-f="義式" onclick="setFilter('義式',this)">🍝 義式</div>
+      <div class="chip" data-f="台式" onclick="setFilter('台式',this)">🫕 台式</div>
+      <div class="chip" data-f="美式" onclick="setFilter('美式',this)">🍔 美式</div>
+    </div>
+    <div id="nearby-list"></div>
+  </div>
+
+  <div class="screen" id="screen-list">
+    <div class="list-header">
+      <div>
+        <div class="list-title">我的收藏</div>
+        <div class="list-count" id="list-count">共 0 間</div>
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="chip on" data-lf="all" onclick="setListFilter('all',this)">全部</div>
+      <div class="chip" data-lf="火鍋" onclick="setListFilter('火鍋',this)">🔥 火鍋</div>
+      <div class="chip" data-lf="熱炒" onclick="setListFilter('熱炒',this)">🥘 熱炒</div>
+      <div class="chip" data-lf="甜點" onclick="setListFilter('甜點',this)">🍰 甜點</div>
+      <div class="chip" data-lf="拉麵" onclick="setListFilter('拉麵',this)">🍜 拉麵</div>
+      <div class="chip" data-lf="壽司" onclick="setListFilter('壽司',this)">🍣 壽司</div>
+      <div class="chip" data-lf="燒烤" onclick="setListFilter('燒烤',this)">🔥 燒烤</div>
+      <div class="chip" data-lf="咖啡" onclick="setListFilter('咖啡',this)">☕ 咖啡</div>
+    </div>
+    <div id="list-cards"></div>
+  </div>
+
+  <div class="screen" id="screen-add">
+    <div class="add-header">➕ 新增店家</div>
+    <div class="add-tabs">
+      <div class="add-tab on" onclick="switchTab('ig',this)">🔗 貼 IG 連結</div>
+      <div class="add-tab" onclick="switchTab('manual',this)">✏️ 手動填寫</div>
+    </div>
+    <div class="add-section on" id="tab-ig">
+      <div class="ig-box">
+        <div class="ig-label">IG 貼文網址</div>
+        <div class="ig-input-row">
+          <input class="ig-input" id="ig-url" placeholder="https://www.instagram.com/p/..." />
+          <button class="btn-parse" id="parse-btn" onclick="parseIG()">AI 解析</button>
+        </div>
+      </div>
+      <div class="parse-result" id="parse-result"></div>
+      <div id="ig-form" style="display:none">
+        <div class="field"><label>店名</label><input id="ig-name"/></div>
+        <div class="row2">
+          <div class="field"><label>風格</label>
+            <select id="ig-style"><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
+          </div>
+          <div class="field"><label>類型</label>
+            <select id="ig-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>其他</option></select>
+          </div>
+        </div>
+        <div class="field"><label>地點</label><input id="ig-loc"/></div>
+        <div class="field"><label>營業時間</label><input id="ig-hours" placeholder="11:30–21:00"/></div>
+        <button class="btn-save" onclick="saveFromIG()">💾 儲存</button>
+      </div>
+    </div>
+    <div class="add-section" id="tab-manual">
+      <div class="field"><label>店名</label><input id="m-name" placeholder="餐廳名稱"/></div>
+      <div class="row2">
+        <div class="field"><label>風格</label>
+          <select id="m-style"><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
+        </div>
+        <div class="field"><label>類型</label>
+          <select id="m-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>其他</option></select>
+        </div>
+      </div>
+      <div class="field"><label>地點</label><input id="m-loc" placeholder="新竹市東區..."/></div>
+      <div class="field"><label>營業時間</label><input id="m-hours" placeholder="11:30–21:00，週二休"/></div>
+      <button class="btn-save" onclick="saveManual()">💾 儲存</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" id="nav-map" onclick="goScreen('map')">
+      <span class="nav-icon">🗺️</span><span class="nav-label">附近</span>
+    </button>
+    <button class="nav-btn" id="nav-list" onclick="goScreen('list')">
+      <span class="nav-icon">📋</span><span class="nav-label">收藏</span>
+    </button>
+    <button class="nav-btn" id="nav-add" onclick="goScreen('add')">
+      <span class="nav-icon">＋</span><span class="nav-label">新增</span>
+    </button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DEMO=[
+  {id:1,name:'麵屋一燈',style:'日式',type:'拉麵',loc:'竹北市文興路',hours:'11:30–21:00，週一休',dx:0.15,dy:-0.22,dist:320},
+  {id:2,name:'Bangkok Garden',style:'泰式',type:'熱炒',loc:'竹北市莊敬北路',hours:'11:00–22:00',dx:-0.28,dy:0.12,dist:680},
+  {id:3,name:'太陽的後裔鍋物',style:'韓式',type:'火鍋',loc:'竹北市縣政二路',hours:'17:00–00:00',dx:0.32,dy:0.18,dist:940},
+  {id:4,name:'Il Posto',style:'義式',type:'義大利麵',loc:'新竹市東區中正路',hours:'12:00–21:30，週三休',dx:-0.1,dy:-0.35,dist:1400},
+  {id:5,name:'日和甜點',style:'日式',type:'甜點',loc:'竹北市自強南路',hours:'13:00–20:00，週一二休',dx:0.05,dy:0.28,dist:750},
+];
+let stores=JSON.parse(localStorage.getItem('foodmap_stores')||'null')||DEMO;
+let maxDist=1000,mapFilter='all',listFilter='all';
+function saveStores(){localStorage.setItem('foodmap_stores',JSON.stringify(stores))}
+function goScreen(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  document.getElementById('screen-'+s).classList.add('active');
+  document.getElementById('nav-'+s).classList.add('active');
+  if(s==='map')renderMap();
+  if(s==='list')renderList();
+}
+function updateDist(v){
+  maxDist=+v;
+  document.getElementById('dist-label').textContent=v>=1000?(v/1000).toFixed(1)+'km':v+'m';
+  updateRangeCircle(v);renderMap();
+}
+function updateRangeCircle(v){
+  const c=document.getElementById('range-circle');
+  const size=Math.min((v/5000)*340,240);
+  c.style.width=size+'px';c.style.height=size+'px';
+}
+function renderMap(){
+  const canvas=document.getElementById('map-canvas');
+  document.querySelectorAll('.store-pin').forEach(x=>x.remove());
+  const nearby=stores.filter(s=>s.dist<=maxDist&&(mapFilter==='all'||s.style===mapFilter));
+  document.getElementById('nearby-label').textContent=`附近 ${nearby.length} 間`;
+  nearby.forEach(s=>{
+    const pin=document.createElement('div');
+    pin.className='store-pin';
+    pin.style.left=(50+s.dx*90)+'%';
+    pin.style.top=(50+s.dy*90)+'%';
+    pin.innerHTML=`<div class="pin-bubble">${s.name}</div><div class="pin-tail"></div>`;
+    pin.onclick=()=>openModal(s);
+    canvas.appendChild(pin);
+  });
+  renderNearbyList(nearby);
+}
+function renderNearbyList(list){
+  const el=document.getElementById('nearby-list');
+  if(!list.length){el.innerHTML='<div class="no-stores"><div class="icon">🔍</div>這個範圍內還沒有收藏的店家</div>';return;}
+  el.innerHTML=list.sort((a,b)=>a.dist-b.dist).map(s=>`
+    <div class="store-card" onclick="openModal(${s.id})">
+      <div><div class="store-name">${s.name}</div>
+      <div class="store-tags"><span class="tag tag-style">${s.style}</span><span class="tag tag-type">${s.type}</span></div>
+      <div class="store-hours">🕐 ${s.hours}</div></div>
+      <div class="store-dist">${s.dist>=1000?(s.dist/1000).toFixed(1)+'km':s.dist+'m'}</div>
+    </div>`).join('');
+}
+function setFilter(f,el){
+  mapFilter=f;
+  document.querySelectorAll('#filter-row .chip').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');renderMap();
+}
+function setListFilter(f,el){
+  listFilter=f;
+  document.querySelectorAll('[data-lf]').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');renderList();
+}
+function renderList(){
+  const filtered=listFilter==='all'?stores:stores.filter(s=>s.type===listFilter);
+  document.getElementById('list-count').textContent=`共 ${stores.length} 間`;
+  const el=document.getElementById('list-cards');
+  if(!filtered.length){el.innerHTML='<div class="no-stores"><div class="icon">📭</div>這個類型還沒有收藏</div>';return;}
+  el.innerHTML=filtered.map(s=>`
+    <div class="store-card" onclick="openModal(${s.id})">
+      <div><div class="store-name">${s.name}</div>
+      <div class="store-tags"><span class="tag tag-style">${s.style}</span><span class="tag tag-type">${s.type}</span></div>
+      <div class="store-hours">📍 ${s.loc}</div>
+      <div class="store-hours" style="margin-top:2px">🕐 ${s.hours}</div></div>
+      <div class="store-dist">${s.dist>=1000?(s.dist/1000).toFixed(1)+'km':s.dist+'m'}</div>
+    </div>`).join('');
+}
+function openModal(idOrObj){
+  const s=typeof idOrObj==='object'?idOrObj:stores.find(x=>x.id===idOrObj);
+  if(!s)return;
+  document.getElementById('modal-content').innerHTML=`
+    <div class="modal-title">${s.name}</div>
+    <div class="modal-sub">${s.dist>=1000?(s.dist/1000).toFixed(1)+'km':s.dist+'m'} · 附近</div>
+    <div class="modal-row"><span class="modal-key">風格</span><span class="modal-val">${s.style}</span></div>
+    <div class="modal-row"><span class="modal-key">類型</span><span class="modal-val">${s.type}</span></div>
+    <div class="modal-row"><span class="modal-key">地點</span><span class="modal-val">${s.loc}</span></div>
+    <div class="modal-row"><span class="modal-key">營業時間</span><span class="modal-val">${s.hours}</span></div>
+    <button class="modal-close" onclick="closeModal()">關閉</button>`;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function switchTab(t,el){
+  document.querySelectorAll('.add-tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.add-section').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tab-'+t).classList.add('on');
+}
+async function parseIG(){
+  const url=document.getElementById('ig-url').value.trim();
+  if(!url){showToast('請先貼上 IG 網址','#e63946');return;}
+  const btn=document.getElementById('parse-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>解析中';
+  const res=document.getElementById('parse-result');
+  res.className='parse-result show';
+  res.innerHTML='<div class="parse-status">🤖 AI 解析中...</div>';
+  try{
+    const prompt=`你是一個幫助用戶整理美食資訊的助手。用戶貼上了一個 Instagram 貼文網址：${url}\n\n請根據這個網址，假設你能看到貼文內容，模擬解析出以下資訊（如果是真實的 IG 連結格式，請盡量合理推測或隨機生成一個台灣餐廳範例）：\n\n回傳格式為純 JSON，不要加 markdown 代碼塊：\n{\n  "name": "店名",\n  "style": "日式/泰式/義式/台式/美式/韓式/中式/其他 其中一個",\n  "type": "拉麵/壽司/火鍋/熱炒/甜點/燒烤/咖啡/義大利麵/其他 其中一個",\n  "loc": "地點（台灣某縣市某路）",\n  "hours": "營業時間"\n}`;
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const text=d.content.map(x=>x.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(text);
+    res.innerHTML=`<div class="parse-status">✅ 解析完成</div>
+      <div class="parse-field"><span class="parse-key">店名</span><span>${parsed.name}</span></div>
+      <div class="parse-field"><span class="parse-key">風格</span><span>${parsed.style}</span></div>
+      <div class="parse-field"><span class="parse-key">類型</span><span>${parsed.type}</span></div>
+      <div class="parse-field"><span class="parse-key">地點</span><span>${parsed.loc}</span></div>
+      <div class="parse-field"><span class="parse-key">營業時間</span><span>${parsed.hours}</span></div>`;
+    document.getElementById('ig-name').value=parsed.name||'';
+    [...document.getElementById('ig-style').options].forEach(o=>{if(o.value===parsed.style)o.selected=true});
+    [...document.getElementById('ig-type').options].forEach(o=>{if(o.value===parsed.type)o.selected=true});
+    document.getElementById('ig-loc').value=parsed.loc||'';
+    document.getElementById('ig-hours').value=parsed.hours||'';
+    document.getElementById('ig-form').style.display='block';
+  }catch(e){
+    res.innerHTML='<div class="parse-status" style="color:var(--red)">❌ 解析失敗，請手動填寫</div>';
+    document.getElementById('ig-form').style.display='block';
+  }
+  btn.disabled=false;btn.textContent='AI 解析';
+}
+function saveManual(){
+  const name=document.getElementById('m-name').value.trim();
+  if(!name){showToast('請填寫店名','#e63946');return;}
+  const s={id:Date.now(),name,style:document.getElementById('m-style').value,type:document.getElementById('m-type').value,
+    loc:document.getElementById('m-loc').value||'未填',hours:document.getElementById('m-hours').value||'未填',
+    dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6,dist:Math.floor(Math.random()*4000+200)};
+  stores.push(s);saveStores();
+  ['m-name','m-loc','m-hours'].forEach(id=>document.getElementById(id).value='');
+  showToast('✅ 已儲存！');goScreen('list');
+}
+function saveFromIG(){
+  const name=document.getElementById('ig-name').value.trim();
+  if(!name){showToast('請確認店名','#e63946');return;}
+  const s={id:Date.now(),name,style:document.getElementById('ig-style').value,type:document.getElementById('ig-type').value,
+    loc:document.getElementById('ig-loc').value||'未填',hours:document.getElementById('ig-hours').value||'未填',
+    dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6,dist:Math.floor(Math.random()*4000+200)};
+  stores.push(s);saveStores();
+  document.getElementById('ig-url').value='';
+  document.getElementById('parse-result').className='parse-result';
+  document.getElementById('ig-form').style.display='none';
+  showToast('✅ 已儲存！');goScreen('list');
+}
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=color||'var(--green)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+}
+updateRangeCircle(1000);renderMap();
+</script>
+</body>
+</html>
