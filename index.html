@@ -71,28 +71,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .add-section.on{display:block}
 .ig-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
 .ig-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);letter-spacing:.08em}
+.ig-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.2);border-radius:8px;padding:8px 10px}
 .ig-input-row{display:flex;gap:8px}
 .ig-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none}
 .ig-input:focus{border-color:var(--accent)}
 .ig-input::placeholder{color:var(--muted)}
-.btn-parse{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:var(--font);transition:opacity .2s}
-.btn-parse:disabled{opacity:.5;cursor:not-allowed}
-.parse-result{background:var(--card);border:1px solid var(--green);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:none}
-.parse-result.show{display:block}
-.parse-status{font-size:12px;color:var(--green);font-family:var(--mono);margin-bottom:8px}
-.parse-field{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px}
-.parse-field:last-child{border-bottom:none}
-.parse-key{color:var(--muted)}
+.btn-parse{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:var(--font)}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-family:var(--mono);letter-spacing:.06em}
 .field input,.field select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none}
 .field input:focus,.field select:focus{border-color:var(--accent)}
 .field select option{background:var(--card)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.btn-save{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:var(--font);letter-spacing:.02em;transition:opacity .2s}
-.btn-save:hover{opacity:.9}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
-@keyframes spin{to{transform:rotate(360deg)}}
+.btn-save{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:var(--font);letter-spacing:.02em}
+.ig-link{font-size:11px;color:var(--blue);word-break:break-all;margin-bottom:10px;padding:6px 10px;background:rgba(78,168,222,.08);border-radius:6px;border:1px solid rgba(78,168,222,.2)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center}
@@ -111,6 +103,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </head>
 <body>
 <div class="app">
+
+  <!-- MAP -->
   <div class="screen active" id="screen-map">
     <div class="map-header">
       <div class="map-title">食<span>圖</span></div>
@@ -132,16 +126,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
     <div class="section-head" id="nearby-label">附近 0 間</div>
     <div class="filter-row" id="filter-row">
-      <div class="chip on" data-f="all" onclick="setFilter('all',this)">全部</div>
-      <div class="chip" data-f="日式" onclick="setFilter('日式',this)">🍱 日式</div>
-      <div class="chip" data-f="泰式" onclick="setFilter('泰式',this)">🍜 泰式</div>
-      <div class="chip" data-f="義式" onclick="setFilter('義式',this)">🍝 義式</div>
-      <div class="chip" data-f="台式" onclick="setFilter('台式',this)">🫕 台式</div>
-      <div class="chip" data-f="美式" onclick="setFilter('美式',this)">🍔 美式</div>
+      <div class="chip on" onclick="setFilter('all',this)">全部</div>
+      <div class="chip" onclick="setFilter('日式',this)">🍱 日式</div>
+      <div class="chip" onclick="setFilter('泰式',this)">🍜 泰式</div>
+      <div class="chip" onclick="setFilter('義式',this)">🍝 義式</div>
+      <div class="chip" onclick="setFilter('台式',this)">🫕 台式</div>
+      <div class="chip" onclick="setFilter('美式',this)">🍔 美式</div>
+      <div class="chip" onclick="setFilter('韓式',this)">🥘 韓式</div>
     </div>
     <div id="nearby-list"></div>
   </div>
 
+  <!-- LIST -->
   <div class="screen" id="screen-list">
     <div class="list-header">
       <div>
@@ -150,35 +146,39 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
     </div>
     <div class="filter-row">
-      <div class="chip on" data-lf="all" onclick="setListFilter('all',this)">全部</div>
-      <div class="chip" data-lf="火鍋" onclick="setListFilter('火鍋',this)">🔥 火鍋</div>
-      <div class="chip" data-lf="熱炒" onclick="setListFilter('熱炒',this)">🥘 熱炒</div>
-      <div class="chip" data-lf="甜點" onclick="setListFilter('甜點',this)">🍰 甜點</div>
-      <div class="chip" data-lf="拉麵" onclick="setListFilter('拉麵',this)">🍜 拉麵</div>
-      <div class="chip" data-lf="壽司" onclick="setListFilter('壽司',this)">🍣 壽司</div>
-      <div class="chip" data-lf="燒烤" onclick="setListFilter('燒烤',this)">🔥 燒烤</div>
-      <div class="chip" data-lf="咖啡" onclick="setListFilter('咖啡',this)">☕ 咖啡</div>
+      <div class="chip on" onclick="setListFilter('all',this)">全部</div>
+      <div class="chip" onclick="setListFilter('火鍋',this)">🔥 火鍋</div>
+      <div class="chip" onclick="setListFilter('熱炒',this)">🥘 熱炒</div>
+      <div class="chip" onclick="setListFilter('甜點',this)">🍰 甜點</div>
+      <div class="chip" onclick="setListFilter('拉麵',this)">🍜 拉麵</div>
+      <div class="chip" onclick="setListFilter('壽司',this)">🍣 壽司</div>
+      <div class="chip" onclick="setListFilter('燒烤',this)">🔥 燒烤</div>
+      <div class="chip" onclick="setListFilter('咖啡',this)">☕ 咖啡</div>
     </div>
     <div id="list-cards"></div>
   </div>
 
+  <!-- ADD -->
   <div class="screen" id="screen-add">
     <div class="add-header">➕ 新增店家</div>
     <div class="add-tabs">
       <div class="add-tab on" onclick="switchTab('ig',this)">🔗 貼 IG 連結</div>
       <div class="add-tab" onclick="switchTab('manual',this)">✏️ 手動填寫</div>
     </div>
+
+    <!-- IG TAB -->
     <div class="add-section on" id="tab-ig">
       <div class="ig-box">
         <div class="ig-label">IG 貼文網址</div>
+        <div class="ig-hint">📋 貼上 IG 連結後，系統會自動帶入網址並開啟表單，你再手動填入店家資訊就好</div>
         <div class="ig-input-row">
-          <input class="ig-input" id="ig-url" placeholder="https://www.instagram.com/p/..." />
-          <button class="btn-parse" id="parse-btn" onclick="parseIG()">AI 解析</button>
+          <input class="ig-input" id="ig-url" placeholder="https://www.instagram.com/p/..."/>
+          <button class="btn-parse" onclick="prepareFromIG()">帶入</button>
         </div>
       </div>
-      <div class="parse-result" id="parse-result"></div>
       <div id="ig-form" style="display:none">
-        <div class="field"><label>店名</label><input id="ig-name"/></div>
+        <div class="ig-link" id="ig-link-display"></div>
+        <div class="field"><label>店名 *</label><input id="ig-name" placeholder="請填入店名"/></div>
         <div class="row2">
           <div class="field"><label>風格</label>
             <select id="ig-style"><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
@@ -187,13 +187,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
             <select id="ig-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>其他</option></select>
           </div>
         </div>
-        <div class="field"><label>地點</label><input id="ig-loc"/></div>
+        <div class="field"><label>地點</label><input id="ig-loc" placeholder="新竹市東區..."/></div>
         <div class="field"><label>營業時間</label><input id="ig-hours" placeholder="11:30–21:00"/></div>
         <button class="btn-save" onclick="saveFromIG()">💾 儲存</button>
       </div>
     </div>
+
+    <!-- MANUAL TAB -->
     <div class="add-section" id="tab-manual">
-      <div class="field"><label>店名</label><input id="m-name" placeholder="餐廳名稱"/></div>
+      <div class="field"><label>店名 *</label><input id="m-name" placeholder="餐廳名稱"/></div>
       <div class="row2">
         <div class="field"><label>風格</label>
           <select id="m-style"><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
@@ -228,15 +230,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <script>
 const DEMO=[
-  {id:1,name:'麵屋一燈',style:'日式',type:'拉麵',loc:'竹北市文興路',hours:'11:30–21:00，週一休',dx:0.15,dy:-0.22,dist:320},
-  {id:2,name:'Bangkok Garden',style:'泰式',type:'熱炒',loc:'竹北市莊敬北路',hours:'11:00–22:00',dx:-0.28,dy:0.12,dist:680},
-  {id:3,name:'太陽的後裔鍋物',style:'韓式',type:'火鍋',loc:'竹北市縣政二路',hours:'17:00–00:00',dx:0.32,dy:0.18,dist:940},
-  {id:4,name:'Il Posto',style:'義式',type:'義大利麵',loc:'新竹市東區中正路',hours:'12:00–21:30，週三休',dx:-0.1,dy:-0.35,dist:1400},
-  {id:5,name:'日和甜點',style:'日式',type:'甜點',loc:'竹北市自強南路',hours:'13:00–20:00，週一二休',dx:0.05,dy:0.28,dist:750},
+  {id:1,name:'麵屋一燈',style:'日式',type:'拉麵',loc:'竹北市文興路',hours:'11:30–21:00，週一休',igUrl:'',dx:0.15,dy:-0.22,dist:320},
+  {id:2,name:'Bangkok Garden',style:'泰式',type:'熱炒',loc:'竹北市莊敬北路',hours:'11:00–22:00',igUrl:'',dx:-0.28,dy:0.12,dist:680},
+  {id:3,name:'太陽的後裔鍋物',style:'韓式',type:'火鍋',loc:'竹北市縣政二路',hours:'17:00–00:00',igUrl:'',dx:0.32,dy:0.18,dist:940},
+  {id:4,name:'Il Posto',style:'義式',type:'義大利麵',loc:'新竹市東區中正路',hours:'12:00–21:30，週三休',igUrl:'',dx:-0.1,dy:-0.35,dist:1400},
+  {id:5,name:'日和甜點',style:'日式',type:'甜點',loc:'竹北市自強南路',hours:'13:00–20:00，週一二休',igUrl:'',dx:0.05,dy:0.28,dist:750},
 ];
-let stores=JSON.parse(localStorage.getItem('foodmap_stores')||'null')||DEMO;
+let stores=JSON.parse(localStorage.getItem('foodmap_v2')||'null')||DEMO;
 let maxDist=1000,mapFilter='all',listFilter='all';
-function saveStores(){localStorage.setItem('foodmap_stores',JSON.stringify(stores))}
+function saveStores(){localStorage.setItem('foodmap_v2',JSON.stringify(stores))}
+
 function goScreen(s){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
@@ -289,7 +292,7 @@ function setFilter(f,el){
 }
 function setListFilter(f,el){
   listFilter=f;
-  document.querySelectorAll('[data-lf]').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('#screen-list .chip').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');renderList();
 }
 function renderList(){
@@ -309,13 +312,15 @@ function renderList(){
 function openModal(idOrObj){
   const s=typeof idOrObj==='object'?idOrObj:stores.find(x=>x.id===idOrObj);
   if(!s)return;
+  const igRow=s.igUrl?`<div class="modal-row"><span class="modal-key">IG 來源</span><span class="modal-val"><a href="${s.igUrl}" target="_blank" style="color:var(--blue)">開啟貼文</a></span></div>`:'';
   document.getElementById('modal-content').innerHTML=`
     <div class="modal-title">${s.name}</div>
     <div class="modal-sub">${s.dist>=1000?(s.dist/1000).toFixed(1)+'km':s.dist+'m'} · 附近</div>
     <div class="modal-row"><span class="modal-key">風格</span><span class="modal-val">${s.style}</span></div>
     <div class="modal-row"><span class="modal-key">類型</span><span class="modal-val">${s.type}</span></div>
-    <div class="modal-row"><span class="modal-key">地點</span><span class="modal-val">${s.loc}</span></div>
-    <div class="modal-row"><span class="modal-key">營業時間</span><span class="modal-val">${s.hours}</span></div>
+    <div class="modal-row"><span class="modal-key">地點</span><span class="modal-val">${s.loc||'未填'}</span></div>
+    <div class="modal-row"><span class="modal-key">營業時間</span><span class="modal-val">${s.hours||'未填'}</span></div>
+    ${igRow}
     <button class="modal-close" onclick="closeModal()">關閉</button>`;
   document.getElementById('modal').classList.add('show');
 }
@@ -326,61 +331,51 @@ function switchTab(t,el){
   el.classList.add('on');
   document.getElementById('tab-'+t).classList.add('on');
 }
-async function parseIG(){
+
+// IG: 帶入連結，展開表單讓用戶手動填
+function prepareFromIG(){
   const url=document.getElementById('ig-url').value.trim();
   if(!url){showToast('請先貼上 IG 網址','#e63946');return;}
-  const btn=document.getElementById('parse-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>解析中';
-  const res=document.getElementById('parse-result');
-  res.className='parse-result show';
-  res.innerHTML='<div class="parse-status">🤖 AI 解析中...</div>';
-  try{
-    const prompt=`你是一個幫助用戶整理美食資訊的助手。用戶貼上了一個 Instagram 貼文網址：${url}\n\n請根據這個網址，假設你能看到貼文內容，模擬解析出以下資訊（如果是真實的 IG 連結格式，請盡量合理推測或隨機生成一個台灣餐廳範例）：\n\n回傳格式為純 JSON，不要加 markdown 代碼塊：\n{\n  "name": "店名",\n  "style": "日式/泰式/義式/台式/美式/韓式/中式/其他 其中一個",\n  "type": "拉麵/壽司/火鍋/熱炒/甜點/燒烤/咖啡/義大利麵/其他 其中一個",\n  "loc": "地點（台灣某縣市某路）",\n  "hours": "營業時間"\n}`;
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
-    });
-    const d=await r.json();
-    const text=d.content.map(x=>x.text||'').join('').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(text);
-    res.innerHTML=`<div class="parse-status">✅ 解析完成</div>
-      <div class="parse-field"><span class="parse-key">店名</span><span>${parsed.name}</span></div>
-      <div class="parse-field"><span class="parse-key">風格</span><span>${parsed.style}</span></div>
-      <div class="parse-field"><span class="parse-key">類型</span><span>${parsed.type}</span></div>
-      <div class="parse-field"><span class="parse-key">地點</span><span>${parsed.loc}</span></div>
-      <div class="parse-field"><span class="parse-key">營業時間</span><span>${parsed.hours}</span></div>`;
-    document.getElementById('ig-name').value=parsed.name||'';
-    [...document.getElementById('ig-style').options].forEach(o=>{if(o.value===parsed.style)o.selected=true});
-    [...document.getElementById('ig-type').options].forEach(o=>{if(o.value===parsed.type)o.selected=true});
-    document.getElementById('ig-loc').value=parsed.loc||'';
-    document.getElementById('ig-hours').value=parsed.hours||'';
-    document.getElementById('ig-form').style.display='block';
-  }catch(e){
-    res.innerHTML='<div class="parse-status" style="color:var(--red)">❌ 解析失敗，請手動填寫</div>';
-    document.getElementById('ig-form').style.display='block';
-  }
-  btn.disabled=false;btn.textContent='AI 解析';
+  document.getElementById('ig-link-display').textContent='📎 '+url;
+  document.getElementById('ig-name').value='';
+  document.getElementById('ig-loc').value='';
+  document.getElementById('ig-hours').value='';
+  document.getElementById('ig-form').style.display='block';
+  document.getElementById('ig-name').focus();
+}
+function saveFromIG(){
+  const name=document.getElementById('ig-name').value.trim();
+  if(!name){showToast('請填寫店名','#e63946');return;}
+  const s={
+    id:Date.now(),name,
+    style:document.getElementById('ig-style').value,
+    type:document.getElementById('ig-type').value,
+    loc:document.getElementById('ig-loc').value||'未填',
+    hours:document.getElementById('ig-hours').value||'未填',
+    igUrl:document.getElementById('ig-url').value.trim(),
+    dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6,
+    dist:Math.floor(Math.random()*4000+200)
+  };
+  stores.push(s);saveStores();
+  document.getElementById('ig-url').value='';
+  document.getElementById('ig-form').style.display='none';
+  showToast('✅ 已儲存！');goScreen('list');
 }
 function saveManual(){
   const name=document.getElementById('m-name').value.trim();
   if(!name){showToast('請填寫店名','#e63946');return;}
-  const s={id:Date.now(),name,style:document.getElementById('m-style').value,type:document.getElementById('m-type').value,
-    loc:document.getElementById('m-loc').value||'未填',hours:document.getElementById('m-hours').value||'未填',
-    dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6,dist:Math.floor(Math.random()*4000+200)};
+  const s={
+    id:Date.now(),name,
+    style:document.getElementById('m-style').value,
+    type:document.getElementById('m-type').value,
+    loc:document.getElementById('m-loc').value||'未填',
+    hours:document.getElementById('m-hours').value||'未填',
+    igUrl:'',
+    dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6,
+    dist:Math.floor(Math.random()*4000+200)
+  };
   stores.push(s);saveStores();
   ['m-name','m-loc','m-hours'].forEach(id=>document.getElementById(id).value='');
-  showToast('✅ 已儲存！');goScreen('list');
-}
-function saveFromIG(){
-  const name=document.getElementById('ig-name').value.trim();
-  if(!name){showToast('請確認店名','#e63946');return;}
-  const s={id:Date.now(),name,style:document.getElementById('ig-style').value,type:document.getElementById('ig-type').value,
-    loc:document.getElementById('ig-loc').value||'未填',hours:document.getElementById('ig-hours').value||'未填',
-    dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6,dist:Math.floor(Math.random()*4000+200)};
-  stores.push(s);saveStores();
-  document.getElementById('ig-url').value='';
-  document.getElementById('parse-result').className='parse-result';
-  document.getElementById('ig-form').style.display='none';
   showToast('✅ 已儲存！');goScreen('list');
 }
 function showToast(msg,color){
