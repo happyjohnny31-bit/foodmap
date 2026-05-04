@@ -99,6 +99,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .modal-close{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-size:14px;cursor:pointer;margin-top:16px;font-family:var(--font)}
 .no-stores{text-align:center;padding:40px 20px;color:var(--muted)}
 .no-stores .icon{font-size:40px;margin-bottom:12px}
+.field textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;resize:vertical;min-height:90px;line-height:1.6}
+.field textarea:focus{border-color:var(--accent)}
+.field textarea::placeholder{color:var(--muted)}
+.field .hint{font-size:10px;color:var(--muted);margin-top:4px}
+.btn-delete{width:100%;background:transparent;border:1px solid var(--red);border-radius:10px;padding:12px;color:var(--red);font-size:14px;cursor:pointer;margin-top:8px;font-family:var(--font)}
+.modal-hours{font-size:13px;font-weight:500;text-align:right;max-width:60%;white-space:pre-line;line-height:1.6}
 </style>
 </head>
 <body>
@@ -180,15 +186,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="ig-link" id="ig-link-display"></div>
         <div class="field"><label>店名 *</label><input id="ig-name" placeholder="請填入店名"/></div>
         <div class="row2">
-          <div class="field"><label>風格</label>
-            <select id="ig-style"><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
+          <div class="field"><label>菜系</label>
+            <select id="ig-style"><option>無</option><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
           </div>
           <div class="field"><label>類型</label>
-            <select id="ig-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>其他</option></select>
+            <select id="ig-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>下午茶咖啡</option><option>其他</option></select>
           </div>
         </div>
         <div class="field"><label>地點</label><input id="ig-loc" placeholder="新竹市東區..."/></div>
-        <div class="field"><label>營業時間</label><input id="ig-hours" placeholder="11:30–21:00"/></div>
+        <div class="field"><label>營業時間</label><textarea id="ig-hours" placeholder="一〜五 11:30–21:00&#10;六日 11:00–22:00&#10;週一休"></textarea><div class="hint">💡 每行一段時間，可分天填寫</div></div>
         <button class="btn-save" onclick="saveFromIG()">💾 儲存</button>
       </div>
     </div>
@@ -197,15 +203,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="add-section" id="tab-manual">
       <div class="field"><label>店名 *</label><input id="m-name" placeholder="餐廳名稱"/></div>
       <div class="row2">
-        <div class="field"><label>風格</label>
-          <select id="m-style"><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
+        <div class="field"><label>菜系</label>
+          <select id="m-style"><option>無</option><option>日式</option><option>泰式</option><option>義式</option><option>台式</option><option>美式</option><option>韓式</option><option>中式</option><option>其他</option></select>
         </div>
         <div class="field"><label>類型</label>
-          <select id="m-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>其他</option></select>
+          <select id="m-type"><option>拉麵</option><option>壽司</option><option>火鍋</option><option>熱炒</option><option>甜點</option><option>燒烤</option><option>咖啡</option><option>義大利麵</option><option>下午茶咖啡</option><option>其他</option></select>
         </div>
       </div>
       <div class="field"><label>地點</label><input id="m-loc" placeholder="新竹市東區..."/></div>
-      <div class="field"><label>營業時間</label><input id="m-hours" placeholder="11:30–21:00，週二休"/></div>
+      <div class="field"><label>營業時間</label><textarea id="m-hours" placeholder="一〜五 11:30–21:00&#10;六日 11:00–22:00&#10;週一休"></textarea><div class="hint">💡 每行一段時間，可分天填寫</div></div>
       <button class="btn-save" onclick="saveManual()">💾 儲存</button>
     </div>
   </div>
@@ -313,18 +319,27 @@ function openModal(idOrObj){
   const s=typeof idOrObj==='object'?idOrObj:stores.find(x=>x.id===idOrObj);
   if(!s)return;
   const igRow=s.igUrl?`<div class="modal-row"><span class="modal-key">IG 來源</span><span class="modal-val"><a href="${s.igUrl}" target="_blank" style="color:var(--blue)">開啟貼文</a></span></div>`:'';
+  const hoursDisplay=(s.hours||'未填').replace(/\\n/g,'\n');
   document.getElementById('modal-content').innerHTML=`
     <div class="modal-title">${s.name}</div>
     <div class="modal-sub">${s.dist>=1000?(s.dist/1000).toFixed(1)+'km':s.dist+'m'} · 附近</div>
-    <div class="modal-row"><span class="modal-key">風格</span><span class="modal-val">${s.style}</span></div>
+    <div class="modal-row"><span class="modal-key">菜系</span><span class="modal-val">${s.style}</span></div>
     <div class="modal-row"><span class="modal-key">類型</span><span class="modal-val">${s.type}</span></div>
     <div class="modal-row"><span class="modal-key">地點</span><span class="modal-val">${s.loc||'未填'}</span></div>
-    <div class="modal-row"><span class="modal-key">營業時間</span><span class="modal-val">${s.hours||'未填'}</span></div>
+    <div class="modal-row"><span class="modal-key">營業時間</span><span class="modal-hours">${hoursDisplay}</span></div>
     ${igRow}
-    <button class="modal-close" onclick="closeModal()">關閉</button>`;
+    <button class="modal-close" onclick="closeModal()">關閉</button>
+    <button class="btn-delete" onclick="deleteStore(${s.id})">🗑️ 刪除這間店家</button>`;
   document.getElementById('modal').classList.add('show');
 }
 function closeModal(){document.getElementById('modal').classList.remove('show')}
+function deleteStore(id){
+  if(!confirm('確定要刪除這間店家嗎？'))return;
+  stores=stores.filter(s=>s.id!==id);
+  saveStores();closeModal();
+  renderMap();renderList();
+  showToast('已刪除');
+}
 function switchTab(t,el){
   document.querySelectorAll('.add-tab').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.add-section').forEach(x=>x.classList.remove('on'));
